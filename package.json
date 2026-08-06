@@ -1,0 +1,24 @@
+{
+  "name": "prd-studio",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build -w @prd-studio/contracts && concurrently -n server,client -c blue,magenta \"npm run dev -w @prd-studio/server\" \"npm run dev -w @prd-studio/client\"",
+    "build": "npm run build -w @prd-studio/contracts && npm run build -w @prd-studio/server && npm run build -w @prd-studio/client",
+    "typecheck": "npm run build -w @prd-studio/contracts && npm run typecheck -w @prd-studio/server && npm run typecheck -w @prd-studio/client",
+    "lint": "npm run build -w @prd-studio/contracts && npm run lint -w @prd-studio/server && npm run lint -w @prd-studio/client",
+    "test": "npm run build -w @prd-studio/contracts && npm run test -w @prd-studio/server && npm run test -w @prd-studio/client",
+    "test:e2e": "npm run build -w @prd-studio/contracts && npm run test:e2e -w @prd-studio/client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

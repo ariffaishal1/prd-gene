@@ -1,0 +1,240 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #17213a;
+  --cobalt: #3157d5;
+  --mist: #eaf0ff;
+  --paper: #fbfcff;
+  --coral: #ef6d5b;
+  --line: #d9e0ee;
+  --muted: #66728b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #eef2f8;
+  color: var(--ink);
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+textarea {
+  outline-color: var(--cobalt);
+  outline-offset: 3px;
+}
+
+.workshop-shell {
+  background-image:
+    linear-gradient(rgba(49, 87, 213, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(49, 87, 213, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.brief-spine::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 40%;
+  z-index: 30;
+  width: 1px;
+  background: linear-gradient(transparent 3%, rgba(49, 87, 213, 0.35) 18%, rgba(49, 87, 213, 0.35) 82%, transparent 97%);
+  pointer-events: none;
+}
+
+.brief-spine::after {
+  content: "DISCOVERY → DOKUMEN";
+  position: absolute;
+  top: 50%;
+  left: 40%;
+  z-index: 31;
+  padding: 7px 10px;
+  border: 1px solid rgba(49, 87, 213, 0.2);
+  border-radius: 999px;
+  background: #f4f7fd;
+  color: var(--cobalt);
+  font: 700 9px/1 "SFMono-Regular", Consolas, monospace;
+  letter-spacing: 0.1em;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  pointer-events: none;
+}
+
+.scroll-slim {
+  scrollbar-color: #bcc8e0 transparent;
+  scrollbar-width: thin;
+}
+
+.chat-markdown > :first-child {
+  margin-top: 0;
+}
+
+.chat-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.chat-markdown p,
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: 0.65rem 0;
+}
+
+.chat-markdown ul,
+.chat-markdown ol {
+  padding-left: 1.25rem;
+}
+
+.chat-markdown ul {
+  list-style: disc;
+}
+
+.chat-markdown ol {
+  list-style: decimal;
+}
+
+.chat-markdown strong {
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.chat-markdown a {
+  color: var(--cobalt);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-suggestion {
+  font-size: 10px !important;
+  line-height: 1.4;
+}
+
+.prd-markdown {
+  color: #27334b;
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.prd-markdown h1,
+.prd-markdown h2,
+.prd-markdown h3 {
+  color: var(--ink);
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+
+.prd-markdown h1 {
+  margin: 2.3rem 0 0.8rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.55rem;
+}
+
+.prd-markdown h1:first-child {
+  margin-top: 0;
+}
+
+.prd-markdown h2 {
+  margin: 1.7rem 0 0.6rem;
+  font-size: 1.25rem;
+}
+
+.prd-markdown h3 {
+  margin: 1.3rem 0 0.45rem;
+  font-size: 1.05rem;
+}
+
+.prd-markdown p,
+.prd-markdown ul,
+.prd-markdown ol {
+  margin: 0.8rem 0;
+}
+
+.prd-markdown ul,
+.prd-markdown ol {
+  padding-left: 1.4rem;
+}
+
+.prd-markdown ul {
+  list-style: disc;
+}
+
+.prd-markdown ol {
+  list-style: decimal;
+}
+
+.prd-markdown table {
+  width: 100%;
+  margin: 1.2rem 0;
+  border-collapse: collapse;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+}
+
+.prd-markdown th,
+.prd-markdown td {
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prd-markdown th {
+  background: var(--mist);
+  color: var(--ink);
+}
+
+.prd-markdown code {
+  padding: 0.12rem 0.3rem;
+  border-radius: 4px;
+  background: #eef2f8;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.85em;
+}
+
+@keyframes workshop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.workshop-enter {
+  animation: workshop-in 420ms ease-out both;
+}
+
+@media (max-width: 767px) {
+  .brief-spine::before,
+  .brief-spine::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
