@@ -1,4 +1,5 @@
-import type { ApiErrorCode } from "@prd-studio/contracts";
+import type { ApiErrorBody, ApiErrorCode } from "@prd-studio/contracts";
+import { NextResponse } from "next/server";
 
 export class AppError extends Error {
   constructor(
@@ -39,5 +40,20 @@ export function mapAiError(error: unknown): AppError {
     "AI_UNAVAILABLE",
     "Layanan AI tidak dapat dihubungi. Pastikan GEMINI_API_KEY benar dan koneksi internet stabil.",
     502
+  );
+}
+
+export function handleApiError(error: unknown): NextResponse<ApiErrorBody> {
+  let appError = error instanceof AppError ? error : undefined;
+  if (!appError) {
+    console.error(error);
+    appError = new AppError("INTERNAL_ERROR", "Terjadi kesalahan pada server.", 500);
+  }
+  return NextResponse.json(
+    {
+      success: false,
+      error: { code: appError.code, message: appError.message }
+    },
+    { status: appError.status }
   );
 }

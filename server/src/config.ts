@@ -20,9 +20,9 @@ export function loadConfig(environment = process.env): AppConfig {
 
   return {
     port,
-    aiBaseUrl: (environment.AI_BASE_URL ?? "http://127.0.0.1:20128/v1").replace(/\/$/, ""),
-    aiApiKey: environment.AI_API_KEY ?? "",
-    aiModel: environment.AI_MODEL ?? "",
+    aiBaseUrl: (environment.AI_BASE_URL ?? "").replace(/\/$/, ""),
+    aiApiKey: environment.GEMINI_API_KEY ?? environment.AI_API_KEY ?? "",
+    aiModel: environment.AI_MODEL || "gemini-2.5-flash",
     corsOrigins: (environment.CORS_ORIGIN ?? "http://localhost:3000")
       .split(",")
       .map((origin) => origin.trim())
