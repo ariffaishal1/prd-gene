@@ -8,10 +8,9 @@ import type {
   UploadResponse
 } from "@prd-studio/contracts";
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(
-  /\/$/,
-  ""
-);
+// API routes live inside Next.js (src/app/api/*), so we always use relative paths.
+// No external server URL needed — requests go to /api/* on the same origin.
+const API_BASE_URL = "";
 
 export class ApiError extends Error {
   constructor(
