@@ -15,7 +15,9 @@ export async function GET() {
     try {
       const models = await ai.listModels();
       reachable = true;
-      modelAvailable = models.includes(config.aiModel);
+      modelAvailable =
+        models.includes(config.aiModel) ||
+        models.some((m) => m === config.aiModel || m.includes(config.aiModel) || config.aiModel.includes(m));
     } catch {
       reachable = false;
     }

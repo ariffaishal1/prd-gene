@@ -1,3 +1,9 @@
+import path from "node:path";
+import { config as loadEnvironment } from "dotenv";
+
+loadEnvironment({ path: path.resolve(process.cwd(), "../.env"), quiet: true });
+loadEnvironment({ path: path.resolve(process.cwd(), ".env"), quiet: true });
+
 export interface AppConfig {
   aiBaseUrl: string;
   aiApiKey: string;
