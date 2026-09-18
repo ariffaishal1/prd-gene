@@ -1,4 +1,4 @@
-import type { ApiErrorBody, HealthResponse } from "@prd-studio/contracts";
+import type { ApiErrorBody, HealthResponse, ModelsResponse } from "@prd-studio/contracts";
 import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
 import rateLimit from "express-rate-limit";
@@ -73,15 +73,29 @@ export function createApp(options: CreateAppOptions = {}) {
     const body: HealthResponse = {
       status: reachable && modelAvailable ? "ok" : "degraded",
       timestamp: new Date().toISOString(),
-      ai: { reachable, modelConfigured, modelAvailable }
+      ai: { reachable, modelConfigured, modelAvailable, activeModel: ai.getActiveModel() }
     };
     response.json(body);
+  });
+
+  app.get("/api/models", async (_request, response, next) => {
+    try {
+      const models = await ai.listModels();
+      const body: ModelsResponse = {
+        success: true,
+        models,
+        activeModel: ai.getActiveModel()
+      };
+      response.json(body);
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.post("/api/chat", async (request, response, next) => {
     try {
       const body = parse(chatRequestSchema, request.body);
-      const result = parseDiscoveryReply(await ai.complete(buildDiscoveryMessages(body.messages)));
+      const result = parseDiscoveryReply(await ai.complete(buildDiscoveryMessages(body.messages), body.model));
       response.json({
         success: true,
         ...result,
@@ -128,7 +142,7 @@ export function createApp(options: CreateAppOptions = {}) {
     try {
       const body = parse(generatePrdRequestSchema, request.body);
       const files = uploadStore.getMany(body.fileIds, body.sessionId);
-      const prdContent = documentOnly(await ai.complete(buildPrdMessages(body.productTitle, body.history, files)));
+      const prdContent = documentOnly(await ai.complete(buildPrdMessages(body.productTitle, body.history, files), body.model));
       response.json({ success: true, prdContent, productTitle: extractPrdTitle(prdContent) });
     } catch (error) {
       next(error);

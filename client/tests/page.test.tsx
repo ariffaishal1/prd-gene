@@ -19,8 +19,11 @@ function mockApi() {
       return json({
         status: "ok",
         timestamp: new Date().toISOString(),
-        ai: { reachable: true, modelConfigured: true, modelAvailable: true }
+        ai: { reachable: true, modelConfigured: true, modelAvailable: true, activeModel: "test-model" }
       });
+    }
+    if (url.endsWith("/api/models")) {
+      return json({ success: true, models: ["test-model", "test-model-2"], activeModel: "test-model" });
     }
     if (url.endsWith("/api/chat")) {
       return json({ success: true, reply: "Siapa pengguna utama produk ini?", choices: ["Pasien klinik", "Staf pendaftaran", "Keduanya"] });
@@ -72,7 +75,10 @@ describe("Ruang PRD", () => {
 
   it("merender Markdown pada balasan chatbot", async () => {
     vi.mocked(fetch).mockImplementationOnce(async () =>
-      json({ status: "ok", timestamp: new Date().toISOString(), ai: { reachable: true, modelConfigured: true, modelAvailable: true } })
+      json({ status: "ok", timestamp: new Date().toISOString(), ai: { reachable: true, modelConfigured: true, modelAvailable: true, activeModel: "test-model" } })
+    );
+    vi.mocked(fetch).mockImplementationOnce(async () =>
+      json({ success: true, models: ["test-model"], activeModel: "test-model" })
     );
     vi.mocked(fetch).mockImplementationOnce(async () =>
       json({ success: true, reply: "Pertanyaan tentang **Target Pengguna**.", choices: ["Pasien", "Staf", "Keduanya"] })
@@ -187,8 +193,11 @@ describe("Ruang PRD", () => {
       json({
         status: "ok",
         timestamp: new Date().toISOString(),
-        ai: { reachable: true, modelConfigured: true, modelAvailable: true }
+        ai: { reachable: true, modelConfigured: true, modelAvailable: true, activeModel: "test-model" }
       })
+    );
+    vi.mocked(fetch).mockImplementationOnce(async () =>
+      json({ success: true, models: ["test-model"], activeModel: "test-model" })
     );
     vi.mocked(fetch).mockImplementationOnce(async () => json({ success: true, reply: prd }));
     const user = userEvent.setup();
@@ -307,7 +316,10 @@ describe("Ruang PRD", () => {
 
   it("menampilkan error dan dapat mencoba ulang", async () => {
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockImplementationOnce(async () => json({ status: "degraded", timestamp: "", ai: {} }));
+    fetchMock.mockImplementationOnce(async () => json({ status: "degraded", timestamp: "", ai: { activeModel: "test-model" } }));
+    fetchMock.mockImplementationOnce(async () =>
+      json({ success: true, models: ["test-model"], activeModel: "test-model" })
+    );
     fetchMock.mockImplementationOnce(async () =>
       json({ success: false, error: { code: "AI_UNAVAILABLE", message: "9Router belum aktif." } }, 502)
     );

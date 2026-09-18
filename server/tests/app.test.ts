@@ -29,6 +29,7 @@ function mockAi(overrides: Partial<AiClient> = {}): AiClient {
   return {
     complete: vi.fn().mockResolvedValue("Siapa pengguna utama produk ini?"),
     listModels: vi.fn().mockResolvedValue(["test/model"]),
+    getActiveModel: vi.fn().mockReturnValue("test/model"),
     ...overrides
   };
 }

@@ -1,6 +1,7 @@
 import type { ChatMessage, UploadedFile } from "@prd-studio/contracts";
 
 const STORAGE_KEY = "prd-studio:v1";
+const MODEL_KEY = "prd-studio:model";
 
 export interface StoredWorkspace {
   version: 1;
@@ -29,3 +30,24 @@ export function saveWorkspace(workspace: StoredWorkspace) {
 export function clearWorkspace() {
   localStorage.removeItem(STORAGE_KEY);
 }
+
+export function loadSelectedModel(): string {
+  try {
+    return localStorage.getItem(MODEL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function saveSelectedModel(model: string) {
+  try {
+    if (model) {
+      localStorage.setItem(MODEL_KEY, model);
+    } else {
+      localStorage.removeItem(MODEL_KEY);
+    }
+  } catch {
+    // Storage unavailable — ignore silently.
+  }
+}
+

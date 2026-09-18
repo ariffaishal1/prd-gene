@@ -5,6 +5,7 @@ import {
   AlertCircle,
   Bot,
   Check,
+  ChevronDown,
   Clipboard,
   Download,
   FileText,
@@ -15,13 +16,14 @@ import {
   Send,
   Sparkles,
   UserRound,
-  X
+  X,
+  Zap
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api, ApiError } from "@/lib/api";
-import { clearWorkspace, loadWorkspace, saveWorkspace } from "@/lib/storage";
+import { clearWorkspace, loadSelectedModel, loadWorkspace, saveSelectedModel, saveWorkspace } from "@/lib/storage";
 
 const welcomeMessage: ChatMessage = {
   id: "welcome",
@@ -87,6 +89,10 @@ export default function Home() {
   const [health, setHealth] = useState<"checking" | "ok" | "degraded">("checking");
   const [mobilePanel, setMobilePanel] = useState<"chat" | "preview">("chat");
   const [clock, setClock] = useState(0);
+  const [selectedModel, setSelectedModel] = useState("");
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -133,12 +139,44 @@ export default function Home() {
   }, [attachments, hydrated, messages, prdContent, productTitle, sessionId]);
 
   useEffect(() => {
-    api
-      .health()
-      .then((result) => setHealth(result.status))
-      .catch(() => setHealth("degraded"));
+    async function init() {
+      try {
+        const [healthResult, modelsResult] = await Promise.allSettled([
+          api.health(),
+          api.models()
+        ]);
+        if (healthResult.status === "fulfilled") {
+          setHealth(healthResult.value.status);
+        } else {
+          setHealth("degraded");
+        }
+        if (modelsResult.status === "fulfilled") {
+          setAvailableModels(modelsResult.value.models);
+          const persisted = loadSelectedModel();
+          if (persisted && modelsResult.value.models.includes(persisted)) {
+            setSelectedModel(persisted);
+          } else {
+            setSelectedModel(modelsResult.value.activeModel);
+          }
+        }
+      } catch {
+        setHealth("degraded");
+      }
+    }
+    void init();
     const timer = setInterval(() => setClock(Date.now()), 15_000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Close model dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target as Node)) {
+        setModelDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -160,6 +198,20 @@ export default function Home() {
         : expiredIds.size > 0
           ? "Hapus atau unggah ulang lampiran yang kedaluwarsa."
           : "";
+
+  const handleSelectModel = useCallback((model: string) => {
+    setSelectedModel(model);
+    saveSelectedModel(model);
+    setModelDropdownOpen(false);
+  }, []);
+
+  /** Short display name for a model ID. */
+  function modelDisplayName(modelId: string) {
+    return modelId
+      .replace(/^models\//, "")
+      .replace(/^gemini-/, "")
+      .replace(/-latest$/, "");
+  }
 
   async function sendChat(messagesToSend?: ChatMessage[]) {
     if (busy || !sessionId) return;
@@ -183,7 +235,8 @@ export default function Home() {
     try {
       const response = await api.chat({
         messages: contextMessages(nextMessages),
-        sessionId
+        sessionId,
+        model: selectedModel || undefined
       });
       if (isPrd(response.reply)) {
         const prdContent = documentOnly(response.reply);
@@ -283,7 +336,8 @@ export default function Home() {
       const response = await api.generatePrd({
         history: contextMessages(messagesToUse),
         sessionId,
-        fileIds: attachments.map((file) => file.id)
+        fileIds: attachments.map((file) => file.id),
+        model: selectedModel || undefined
       });
       setPrdContent(documentOnly(response.prdContent));
       setIsEditingPrd(false);
@@ -414,11 +468,44 @@ export default function Home() {
               <div className="rounded-2xl border border-[#cbd5e8] bg-white p-2 shadow-[0_10px_30px_rgba(23,33,58,0.08)] transition focus-within:border-[#3157d5] focus-within:ring-3 focus-within:ring-[#3157d5]/10">
                 <textarea aria-label="Pesan discovery" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendChat(); } }} placeholder="Jelaskan masalah, pengguna, atau fitur utamanya…" rows={3} maxLength={20_000} className="block w-full resize-none bg-transparent px-2 py-1.5 text-sm leading-6 text-[#17213a] placeholder:text-[#8c96aa] focus:outline-none" />
                 <div className="flex items-center justify-between border-t border-[#edf0f6] pt-2">
-                  <div>
+                  <div className="flex items-center gap-1">
                     <input ref={fileInputRef} className="sr-only" type="file" accept=".pdf,.txt,.md,.markdown,.png,.jpg,.jpeg" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadFile(file); }} />
                     <button type="button" aria-label="Lampirkan file" disabled={Boolean(busy) || attachments.length >= 5} onClick={() => fileInputRef.current?.click()} className="grid h-9 w-9 place-items-center rounded-lg text-[#66728b] transition hover:bg-[#eaf0ff] hover:text-[#3157d5] disabled:opacity-40">
                       {busy === "upload" ? <LoaderCircle className="animate-spin" size={17} /> : <Paperclip size={17} />}
                     </button>
+                    <div ref={modelDropdownRef} className="relative">
+                      <button
+                        type="button"
+                        aria-label="Pilih model AI"
+                        aria-expanded={modelDropdownOpen}
+                        onClick={() => setModelDropdownOpen((o) => !o)}
+                        disabled={availableModels.length === 0}
+                        className="flex h-9 items-center gap-1.5 rounded-lg border border-[#e0e5ef] bg-[#f7f9fd] px-2.5 text-[11px] font-semibold text-[#445069] transition hover:border-[#3157d5] hover:bg-[#eaf0ff] hover:text-[#3157d5] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Zap size={13} />
+                        <span className="max-w-[120px] truncate">{selectedModel ? modelDisplayName(selectedModel) : "Model…"}</span>
+                        <ChevronDown size={13} className={`transition-transform ${modelDropdownOpen ? "rotate-180" : ""}`} />
+                      </button>
+                      {modelDropdownOpen && availableModels.length > 0 && (
+                        <div className="absolute bottom-full left-0 z-50 mb-1 max-h-60 w-64 overflow-y-auto rounded-xl border border-[#d9e0ee] bg-white p-1 shadow-xl shadow-[#17213a]/10">
+                          {availableModels.map((model) => (
+                            <button
+                              key={model}
+                              type="button"
+                              onClick={() => handleSelectModel(model)}
+                              className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition ${
+                                model === selectedModel
+                                  ? "bg-[#eaf0ff] font-bold text-[#3157d5]"
+                                  : "text-[#445069] hover:bg-[#f4f7fd]"
+                              }`}
+                            >
+                              <span className="flex-1 truncate">{model}</span>
+                              {model === selectedModel && <Check size={14} className="shrink-0 text-[#3157d5]" />}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <button type="button" onClick={() => sendChat()} disabled={Boolean(busy) || !hydrated || !input.trim()} className="flex h-9 items-center gap-2 rounded-lg bg-[#17213a] px-3.5 text-xs font-bold text-white transition hover:bg-[#3157d5] disabled:cursor-not-allowed disabled:opacity-40">
                     Kirim <Send size={14} />

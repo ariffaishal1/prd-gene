@@ -38,6 +38,7 @@ export interface ApiErrorBody {
 export interface ChatRequest {
   messages: ChatMessage[];
   sessionId: string;
+  model?: string;
 }
 
 export interface ChatResponse {
@@ -60,12 +61,19 @@ export interface GeneratePrdRequest {
   productTitle?: string;
   sessionId: string;
   fileIds: string[];
+  model?: string;
 }
 
 export interface GeneratePrdResponse {
   success: true;
   prdContent: string;
   productTitle: string;
+}
+
+export interface ModelsResponse {
+  success: true;
+  models: string[];
+  activeModel: string;
 }
 
 export interface HealthResponse {
@@ -75,5 +83,6 @@ export interface HealthResponse {
     reachable: boolean;
     modelConfigured: boolean;
     modelAvailable: boolean;
+    activeModel: string;
   };
 }

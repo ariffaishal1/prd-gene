@@ -5,6 +5,7 @@ import type {
   GeneratePrdRequest,
   GeneratePrdResponse,
   HealthResponse,
+  ModelsResponse,
   UploadResponse
 } from "@prd-studio/contracts";
 
@@ -38,6 +39,7 @@ const jsonHeaders = { "Content-Type": "application/json" };
 
 export const api = {
   health: () => request<HealthResponse>("/api/health"),
+  models: () => request<ModelsResponse>("/api/models"),
   chat: (body: ChatRequest) =>
     request<ChatResponse>("/api/chat", { method: "POST", headers: jsonHeaders, body: JSON.stringify(body) }),
   generatePrd: (body: GeneratePrdRequest) =>
@@ -59,3 +61,4 @@ export const api = {
       body: JSON.stringify({ sessionId })
     })
 };
+
